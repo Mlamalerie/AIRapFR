@@ -6,7 +6,10 @@ import os
 import shutil
 import time
 import re
-
+from PIL import Image
+import requests
+from io import BytesIO
+import matplotlib.pyplot as plt
 import pandas as pd
 import lyricsgenius
 
@@ -50,6 +53,13 @@ def get_artist_from_query(q: str, index=0):
         "index": index,
 
     }
+    # display image in plt.plot
+
+    response = requests.get(result["image_url"])
+    img = Image.open(BytesIO(response.content))
+    plt.imshow(img)
+    plt.show()
+
     print("Artist found : ", result)
     if ag := genius.artist(int(result["id"])):
         if "artist" in ag.keys():
@@ -118,9 +128,11 @@ def main():
     # Arguments
     parser = argparse.ArgumentParser()
     parser.add_argument('-qa', "--query-artist", help='The artist', required=False, default=None)
+    parser.add_argument('-id', "--query-artist-id", help='The artist', required=False, default=None)
     parser.add_argument('-ow', "--overwrite", help='Overwrite lyrics files', required=False, default=True)
     argdict = vars(parser.parse_args())
     QUERY_ARTIST = argdict['query_artist'] or input("> Artist name (query): ")
+    QUERY_ARTIST_ID = argdict['query_artist_id'] or input("> Artist id ('x' : pass): ")
     OVERWRITE = argdict['overwrite']
 
     # Get artist
