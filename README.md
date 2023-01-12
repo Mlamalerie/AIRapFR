@@ -8,7 +8,7 @@
 <h3 align="center">AiRapFR </h3>
 
   <p align="center">
-    Une IA qui rappe pour vous
+    Générateur de textes, produisant des phrases et des couplets de rap en français, en s'inspirant du style, de la structure et des thèmes abordés par les rappeurs français.
     <br />
     <a href="https://github.com/othneildrew/Best-README-Template"><strong>Demo Streamlit</strong></a>
    
@@ -45,13 +45,11 @@
 <!-- ABOUT THE PROJECT -->
 ## About The Project
 
-[![Product Name Screen Shot][product-screenshot]](https://example.com)
+![Robot with rappers, Rap album cover of the future, oil painting](images/e47b5e12-39b9-4756-9b2b-b230c8464c92.jpg)
 
 Here's a blank template to get started: To avoid retyping too much info. Do a search and replace with your text editor for the following: `github_username`, `repo_name`, `twitter_handle`, `linkedin_username`, `email_client`, `email`, `project_title`, `project_description`
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
-
-
 
 ### Built With
 
@@ -94,18 +92,16 @@ _For more examples, please refer to the [Documentation](https://example.com)_
 - [ ] Feature 1
 - [ ] Feature 2
 - [ ] Feature 3
-    - [ ] Nested Feature
-
-See the [open issues](https://github.com/github_username/repo_name/issues) for a full list of proposed features (and known issues).
+    - [ ] ....
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
 <!-- CONTACT -->
-## 👨🏾‍💻 Contact
+## Contact
 
-Mlamali SAID SALIMO - [@twitter_handle](https://twitter.com/twitter_handle) - mlamali.saidsalimo [ at ] gmail.com
+👨🏾‍💻 Mlamali SAID SALIMO • 📩 mlamali.saidsalimo [ at ] gmail.com • 📶 [LinkedIn](https://www.linkedin.com/in/mlamalisaidsalimo/)
 
-Project Link: [https://github.com/github_username/repo_name](https://github.com/github_username/repo_name)
+Project Link: [https://github.com/Mlamalerie/AIRapFR](https://github.com/Mlamalerie/AIRapFR)
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
