@@ -2,6 +2,8 @@ import os, time
 import re,unicodedata
 import math
 import typing as Optional
+from difflib import SequenceMatcher
+
 
 def create_dir(where: str, name_new_folder : Optional.Union[str, None] = None, sleep_sec: int = 1):
     new_folder_path = f"{where}/{name_new_folder}" if name_new_folder else where
@@ -31,7 +33,7 @@ def remove_accented_chars(text):
     text = unicodedata.normalize('NFKD', text).encode('ascii', 'ignore').decode('utf-8', 'ignore')
     return text
 
-def simplify_text(text,keep_digits=False):
+def simplify_text(text,keep_digits=False,substitute=""):
     """
     Simplify text by removing accents and special characters and lowercasing
     :param text:
@@ -39,8 +41,8 @@ def simplify_text(text,keep_digits=False):
     :return:
     """
     if not keep_digits:
-        return re.sub("[^a-zA-Z]+", "_", remove_accented_chars(text).lower())
-    return re.sub("[^a-zA-Z0-9]+", "_", remove_accented_chars(text).lower())
+        return re.sub("[^a-zA-Z]+", "", remove_accented_chars(text).lower())
+    return re.sub("[^a-zA-Z0-9]+", "", remove_accented_chars(text).lower())
 
 # split my text with many separators
 def split_text_with_separators(text, separators):
@@ -50,3 +52,7 @@ def split_text_with_separators(text, separators):
 # filter my list with a regex
 def filter_str_list(str_list,pattern):
     return [e for e in str_list if re.match(pattern, e)]
+
+# compare two string, return score between 0 and 1
+def compare_str(str1, str2):
+    return SequenceMatcher(None, str1, str2).ratio()
