@@ -1,7 +1,9 @@
-import os, time
-import re, unicodedata
 import math
+import os
+import re
+import time
 import typing as Optional
+import unicodedata
 from difflib import SequenceMatcher
 
 
@@ -27,7 +29,7 @@ def display_loading(txt: str, nb: int, max: int) -> None:
     while i < 10:
         print(u"\u25A1", end="")
         i += 1
-    print("] - " + "%.2f" % percent + f"% {txt}", end="")
+    print("] - " + "%.1f" % percent + f"% {txt}", end="")
 
 
 def remove_accented_chars(text):
@@ -42,9 +44,11 @@ def simplify_text(text, keep_digits=False, substitute=""):
     :param keep_digits:
     :return:
     """
-    if not keep_digits:
-        return re.sub("[^a-zA-Z]+", "", remove_accented_chars(text).lower())
-    return re.sub("[^a-zA-Z0-9]+", "", remove_accented_chars(text).lower())
+    return (
+        re.sub("[^a-zA-Z0-9]+", "", remove_accented_chars(text).lower())
+        if keep_digits
+        else re.sub("[^a-zA-Z]+", "", remove_accented_chars(text).lower())
+    )
 
 
 # split my text with many separators
