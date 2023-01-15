@@ -25,19 +25,6 @@ work well in this space. You may also link to more resources.
 
 _For more examples, please refer to the [Documentation](https://example.com)_
 
-## Roadmap
-
-- [x] LYRICS DATA COLLECTION
-  - [x] Create a list of French rappers
-  - [x] Code a scraper to collect lyrics from the list of rappers
-- [ ] Inform myself on the state of the art
-- [ ] MODELS
-  - [x] Markov Chain
-  - [ ] RNN
-  - [ ] LSTM
-  - [ ] GPT-2
-- [ ] STREAMLIT APP
-
 ## Acknowledgments
 
 * [Genius API](https://docs.genius.com)
