@@ -1,4 +1,3 @@
-<!-- PROJECT LOGO -->
 <br />
 <div align="center">
   <a href="https://github.com/othneildrew/Best-README-Template">
@@ -28,12 +27,26 @@ _For more examples, please refer to the [Documentation](https://example.com)_
 ## Acknowledgments
 
 * [Genius API](https://docs.genius.com)
+* [Pytorch](https://pytorch.org/)
+* [Tensorflow](https://www.tensorflow.org/)
+* [Gpt-2](https://openai.com/blog/better-language-models/)
+* [Transformer](https://arxiv.org/abs/1706.03762)
 * [Streamlit](https://streamlit.io/)
 
-## Contact
+<div align="center">
 
-- 📬 mlamali.saidsalimo [ at ] gmail.com 📬
-- Find me on [LinkedIn](https://www.linkedin.com/in/mlamalisaidsalimo/) or read me
-  on [Medium](https://medium.com/wanabilini) ☺️.
+<h2 align="center">Contact</h2>
+
+  <p>
+   <ul style="list-style-type: none;">
+        <li ><b>@Mlamalerie</b></li>
+        <li > 📬 mlamali.saidsalimo [ at ] gmail.com 📬</li>
+    <li>Find me on <a href="https://www.linkedin.com/in/mlamalisaidsalimo/">LinkedIn</a> or read me
+  on <a href="https://medium.com/wanabilini">Medium</a></li>
+  </ul>
+  </p>
+
+ </div>
+
 
 
