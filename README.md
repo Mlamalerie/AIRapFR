@@ -33,18 +33,13 @@ _For more examples, please refer to the [Documentation](https://example.com)_
 * [Transformer](https://arxiv.org/abs/1706.03762)
 * [Streamlit](https://streamlit.io/)
 
-<div align="center">
+<div align="right">
 
-<h2 align="center">Contact</h2>
+<h1 align="right">Contact</h1>
 
-  <p>
-   <ul style="list-style-type: none;">
-        <li ><b>@Mlamalerie</b></li>
-        <li > 📬 mlamali.saidsalimo [ at ] gmail.com 📬</li>
-    <li>Find me on <a href="https://www.linkedin.com/in/mlamalisaidsalimo/">LinkedIn</a> or read me
-  on <a href="https://medium.com/wanabilini">Medium</a></li>
-  </ul>
-  </p>
+  <p>📬 mlamali.saidsalimo [ at ] gmail.com 📬</p>
+  <p>Find me on <a href="https://www.linkedin.com/in/mlamalisaidsalimo/">LinkedIn</a> or read me on <a href="https://medium.com/wanabilini">Medium !</a></p>
+
 
  </div>
 
