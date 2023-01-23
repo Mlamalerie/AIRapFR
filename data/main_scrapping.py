@@ -1,5 +1,5 @@
 import os
-from utils import simplify_text
+
 
 # verify if artist query is already done
 

@@ -6,12 +6,10 @@ import os
 import shutil
 import time
 import re
-from PIL import Image
 import requests
-from io import BytesIO
-import matplotlib.pyplot as plt
 import pandas as pd
 import lyricsgenius
+from bs4 import BeautifulSoup as bs
 
 from utils import create_dir, compare_str
 
@@ -21,8 +19,36 @@ genius
 
 BACKUP_FOLDER_PATH = f"{os.path.dirname(__file__)}\data"
 
+
 def get_artist_from_id(id):
     return genius.artist(id)
+
+
+def get_genius_id_from_url(url):
+    """
+    Get genius id from url
+    :param url:
+    :return:
+    """
+    if not url:
+        return "None url"
+    if not url.startswith("https://genius.com/"):
+        return "Invalid url"
+    # request and get page content
+    page = requests.get(url)
+    if page.status_code != 200:
+        return "Error : " + str(page.status_code)
+    # parse html
+    soup = bs(page.content, 'html.parser')
+    # get meta tag
+    if meta := soup.find("meta", {"name": "newrelic-resource-path"}):
+        # get id from meta tag
+        if id := re.findall(r"artists\/(\d+)", meta["content"]):
+            return id[0]
+    else:
+        return None
+
+
 def get_artist_from_query(q: str):
     """
     Search a artist by name

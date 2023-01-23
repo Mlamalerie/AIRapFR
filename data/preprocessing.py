@@ -4,7 +4,7 @@ import spacy
 
 nlp = spacy.load("fr_core_news_sm")
 
-
+# todo : découper refrain et couplet
 # nlp.Defaults.stop_words.add("my_new_stopword")
 # print(nlp.Defaults.stop_words)
 def remove_section_brackets(text):
@@ -55,6 +55,8 @@ def preprocess_genius_text(text, lower_case=True, lemmatization=False, stop_word
         tokens = [token.text for token in tokens]
     return tokens if token_output else tokens_2_str(tokens)
 
+
+# todo : function preprocess lyrics dataframe with parallelization
 
 if __name__ == '__main__':
     # test on example text rap
