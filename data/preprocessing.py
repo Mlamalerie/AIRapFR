@@ -1,12 +1,31 @@
+import os
 import re
-
+from functools import partial
+from data.load_corpus import CorpusDataManager
 import spacy
+import pandas as pd
+# from pandarallel import pandarallel
 
+# pandarallel.initialize()
+from tqdm import tqdm
+
+tqdm.pandas()
 nlp = spacy.load("fr_core_news_sm")
-
-# todo : découper refrain et couplet
 # nlp.Defaults.stop_words.add("my_new_stopword")
 # print(nlp.Defaults.stop_words)
+
+cdm = CorpusDataManager()
+df = cdm.get_df_artist_lyrics_by_name("rohff")
+df.shape
+
+# %%
+
+cdm.get_id_by_artist_name("Rohff")
+
+
+# %%
+
+
 def remove_section_brackets(text):
     return re.sub(r"(\[.*?\] \(.*?\))|(\[(.+)\])", "", text)  # avant ça split coulot refrain prendre en compte
 
@@ -17,10 +36,12 @@ def slice_lines(text, deb=None, fin=None):
 
 
 def tokens_2_str(tokens: list) -> str:
-    return " ".join(tokens).strip().replace("' ", "'").replace(" - ", "-").replace(" ,", ",")
+    return " ".join(tokens).strip().replace("' ", "'").replace(" - ", "-").replace(" ,", ",").replace("\n ", "\n")
+
+
 # main function to preprocess text, with parameters to choose which preprocessing steps to apply
 def preprocess_genius_text(text, lower_case=True, lemmatization=False, stop_words_removal=False,
-                           stop_words_to_keep=None, punct_removal=False, token_output=False, crop_first_lines=True):
+                           stop_words_to_keep=None, punct_removal=False, tokenised_output=False, crop_first_lines=True):
     if stop_words_to_keep is None:
         stop_words_to_keep = []
     # Exclude section brackets
@@ -53,14 +74,10 @@ def preprocess_genius_text(text, lower_case=True, lemmatization=False, stop_word
         tokens = [token.lemma_ for token in tokens]
     else:
         tokens = [token.text for token in tokens]
-    return tokens if token_output else tokens_2_str(tokens)
+    return tokens if tokenised_output else tokens_2_str(tokens)
 
 
-# todo : function preprocess lyrics dataframe with parallelization
-
-if __name__ == '__main__':
-    # test on example text rap
-    text = """[Intro] (Rohff)
+text = """[Intro] (Rohff)
     
     [Refrain] (Rohff) 
     J'suis né poussière et j'repartirai poussière \xa0
@@ -75,8 +92,80 @@ if __name__ == '__main__':
     Un article en page faits divers, une hajja en deuil
     Les femmes de la famille autour pour la soutenir
     Du chagrin de son fils qu'elle    a vu sortir
-    Pour plus jamais revenir j'te
+    Pour plus jamais revenir
     """
+print(preprocess_genius_text(text, lower_case=True, lemmatization=False, stop_words_removal=False,
+                             punct_removal=True, tokenised_output=False, crop_first_lines=False))
 
-    print(preprocess_genius_text(text, lower_case=True, lemmatization=True, stop_words_removal=True,
-                                 punct_removal=True, token_output=True, crop_first_lines=False))
+
+# %%
+def preprocess_genius_lyrics_from_df(df, lemmatization=False, stop_words_removal=False,
+                                     stop_words_to_keep=None, punct_removal=False, tokenised_output=False,
+                                     crop_first_lines=True, overwrite_lyrics_column=False):
+    df = df.copy()
+    if stop_words_to_keep is None:
+        stop_words_to_keep = ["je", "tu", "il", "elle", "nous", "vous", "être", "avoir"]
+    f_preprocessing = partial(preprocess_genius_text, lower_case=True, lemmatization=lemmatization,
+                              stop_words_removal=stop_words_removal, stop_words_to_keep=stop_words_to_keep,
+                              punct_removal=punct_removal, tokenised_output=tokenised_output,
+                              crop_first_lines=crop_first_lines)
+    column_name = "lyrics" if overwrite_lyrics_column else "lyrics_preprocessed"
+    df[column_name] = df['lyrics'].progress_apply(f_preprocessing)
+    # df["lyrics_preprocessed"] = df['lyrics'].parallel_apply(f_preprocessing)
+    # df[lyrics_preprocessed"] = df['lyrics'].apply(f_preprocessing)
+    return df
+
+
+# new_df = preprocess_genius_lyrics_from_df(df)
+
+# %%
+def preprocess_and_save_df_to_csv(df: pd.DataFrame, dir_path: str, overwrite=False, lemmatization=False,
+                                  stop_words_removal=False,
+                                  stop_words_to_keep=None, punct_removal=False, tokenised_output=False,
+                                  crop_first_lines=True):
+    # verify if dir_path exists
+    if not os.path.exists(dir_path):
+        raise ValueError(f"dir_path {dir_path} does not exist")
+
+    # search if csv file already exists in dir path
+    csv_file_name = "df_lyrics_preprocessed_"
+    if tokenised_output:
+        csv_file_name += "tok_"
+    if lemmatization:
+        csv_file_name += "lemma_"
+    if stop_words_removal:
+        csv_file_name += "rmstop_"
+    if punct_removal:
+        csv_file_name += "rmpunct_"
+    if crop_first_lines:
+        csv_file_name += "crop_"
+
+    csv_file_name += ".csv"
+    csv_file_path = os.path.join(dir_path, csv_file_name)
+    if os.path.exists(csv_file_path) and not overwrite:
+        return csv_file_path
+    else:
+        df = preprocess_genius_lyrics_from_df(df, lemmatization=lemmatization, stop_words_removal=stop_words_removal,
+                                              stop_words_to_keep=stop_words_to_keep, punct_removal=punct_removal,
+                                              tokenised_output=tokenised_output, crop_first_lines=crop_first_lines,
+                                              overwrite_lyrics_column=True)
+        df.to_csv(csv_file_path, index=False)
+        print("Saved preprocessed lyrics in {}.".format(csv_file_path))
+        return csv_file_path
+
+
+id_ = cdm.get_id_by_artist_name("Rohff")
+preprocess_and_save_df_to_csv(df, cdm.available_artists_ids_paths[id_], overwrite=False, lemmatization=False,
+                              stop_words_removal=False, stop_words_to_keep=[], punct_removal=False,
+                              tokenised_output=True,
+                              crop_first_lines=True)
+
+# %%
+
+query = f"{cdm.available_artists_ids_paths[id_]}/df_genius_*.csv"
+query = f"{cdm.available_artists_ids_paths[id_]}/*_preprocessed_*.csv"
+# get just the csv file in the directory
+from glob import glob
+
+files = glob(query)
+len(files), files

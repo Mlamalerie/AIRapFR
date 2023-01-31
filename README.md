@@ -24,6 +24,7 @@ work well in this space. You may also link to more resources.
 
 _For more examples, please refer to the [Documentation](https://example.com)_
 
+#todo : add gif
 ## Acknowledgments
 
 * [Genius API](https://docs.genius.com)
@@ -39,7 +40,6 @@ _For more examples, please refer to the [Documentation](https://example.com)_
 
   <p>📬 mlamali.saidsalimo [ at ] gmail.com 📬</p>
   <p>Find me on <a href="https://www.linkedin.com/in/mlamalisaidsalimo/">LinkedIn</a> or read me on <a href="https://medium.com/wanabilini">Medium !</a></p>
-
 
  </div>
 
