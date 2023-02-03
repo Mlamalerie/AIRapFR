@@ -2,12 +2,15 @@ import os
 import re
 from glob import glob
 from typing import Tuple
+from tqdm import tqdm
 
 import pandas as pd
 
+ROOT_PATH = os.path.dirname(os.path.abspath(__file__))
+
 
 class CorpusDataManager():
-    def __init__(self, base_dir_path="datasets", columns_we_need=None):
+    def __init__(self, base_dir_path=f"{ROOT_PATH}/datasets", columns_we_need=None):
 
         if columns_we_need is None:
             columns_we_need = [
@@ -51,7 +54,8 @@ class CorpusDataManager():
         return None
 
     def _clean_df_lyrics(self, df):
-
+        if df is None:
+            return None
         # raise error if df don't have the right columns
         if not {"artist", "lyrics"}.issubset(df.columns):
             raise ValueError("Columns are not correct in the dataframe")
@@ -64,16 +68,21 @@ class CorpusDataManager():
 
         # manage type
         df['lyrics'] = df['lyrics'].astype(str)
-        df['language'] = df['language'].astype(str)
         df['artist'] = df['artist'].astype(str)
-        df['title'] = df['title'].astype(str)
-        df['album.name'] = df['album.name'].astype(str)
-        df['artist_names'] = df['artist_names'].astype(str)
+
+        for col in ["language", "title", "album.name", "artist_names"]:
+            if col in df.columns:
+                df[col] = df[col].astype(str)
+            elif col in self.columns_we_need:
+                self.columns_we_need.remove(col)
+
         # int dtype={'id': 'Int64'} date, datetime ect
 
         # select columns we need
         if self.columns_we_need:
             df = df[self.columns_we_need]
+
+        # todo : sort by artist, album, year, title, reset index hein
         return df
 
     def _get_df_dataset_by_dirpath(self, dir_path: str) -> pd.DataFrame:
@@ -81,11 +90,12 @@ class CorpusDataManager():
         if not os.path.exists(dir_path):
             raise ValueError(f"Directory {dir_path} does not exist")
 
-        query = f"{dir_path}/*.csv"
+        query = f"{dir_path}/df_genius_*.csv"
         # get just the csv file in the directory
         if files := glob(query):
             print(f"Loading {files[0]}")
             return pd.read_csv(files[0])
+
         return None
 
     def get_df_artist_lyrics_by_genius_id(self, artist_id: int) -> pd.DataFrame:
@@ -110,6 +120,63 @@ class CorpusDataManager():
             raise ValueError(f"Artist with name {artist_name} not found")
         return None
 
+    def _get_df_lyrics_preprocessed_by_dirpath(self, dir_path: str, lemmatization=False,
+                                               stop_words_removal=False, punct_removal=False, tokenised_output=True,
+                                               crop_first_lines=True) -> pd.DataFrame:
+        # dir exists
+        if not os.path.exists(dir_path):
+            raise ValueError(f"Directory {dir_path} does not exist")
+
+        query = f"{dir_path}/df_lyrics_preprocessed_"
+        if tokenised_output:
+            query += "tok_"
+        if lemmatization:
+            query += "lemma_"
+        if stop_words_removal:
+            query += "rmstop_"
+        if punct_removal:
+            query += "rmpunct_"
+        if crop_first_lines:
+            query += "crop_"
+
+        query += ".csv"
+
+        if not os.path.exists(query):
+            return None
+
+        # get just the csv file in the directory
+        if files := glob(query):
+            print(f"Loading {files[0]}")
+            return pd.read_csv(files[0])
+
+    def get_df_lyrics_preprocessed_by_genius_id(self, artist_id: int, lemmatization=False,
+                                                stop_words_removal=False, punct_removal=False, tokenised_output=True,
+                                                crop_first_lines=True) -> pd.DataFrame:
+
+        # search with glob if there is a directory beginning with genius-{artist_id}
+        if dirs := glob(f"{self.base_dir_path}/genius-{artist_id}-*"):
+            # get the first one
+            dir_path = dirs[0]
+            return self._get_df_lyrics_preprocessed_by_dirpath(dir_path, lemmatization, stop_words_removal,
+                                                               punct_removal, tokenised_output, crop_first_lines)
+        if len(dirs) == 0:
+            raise ValueError(f"Artist with genius id {artist_id} not found")
+        return None
+
+    def get_df_lyrics_preprocessed_by_name(self, artist_name: str, lemmatization=False,
+                                           stop_words_removal=False, punct_removal=False, tokenised_output=True,
+                                           crop_first_lines=True) -> pd.DataFrame:
+
+        artist_name = re.sub('[^A-Za-z0-9é]+', '', artist_name.lower())
+        if dirs := glob(f"{self.base_dir_path}/genius-*-{artist_name}"):
+            # get the first one
+            dir_path = dirs[0]
+            return self._get_df_lyrics_preprocessed_by_dirpath(dir_path, lemmatization, stop_words_removal,
+                                                               punct_removal, tokenised_output, crop_first_lines)
+        if len(dirs) == 0:
+            raise ValueError(f"Artist with name {artist_name} not found")
+        return None
+
     def get_fr_en_artists(self, df_corpus: pd.DataFrame) -> list:
         if not {"language", "artist"}.issubset(df_corpus.columns):
             raise ValueError("Columns are not correct in the dataframe")
@@ -126,15 +193,18 @@ class CorpusDataManager():
         return artists_fr, artists_en
 
     def get_full_df_lyrics_corpus(self, limit_nb_artists=None, only_french_artist=True,
-                                  only_french_songs=True) -> pd.DataFrame:
+                                  only_french_songs=True, preprocessed = False) -> pd.DataFrame:
         # dir exists
         if not os.path.exists(self.base_dir_path):
             raise ValueError(f"Directory {self.base_dir_path} does not exist")
-        if files := glob(f"{self.base_dir_path}/*/*.csv"):
+
+        csv_query = "df_lyrics_preprocessed_*" if preprocessed else "df_genius_*"
+        query = f"{self.base_dir_path}/*/{csv_query}.csv"
+        if files := glob(query):
 
             files_filtered = files[:limit_nb_artists] if limit_nb_artists else files
             print(f"Loading {len(files_filtered)} csv files")
-            df_corpus = pd.concat([pd.read_csv(file_path) for file_path in files_filtered], ignore_index=True)
+            df_corpus = pd.concat([pd.read_csv(file_path) for file_path in tqdm(files_filtered)], ignore_index=True)
             df_corpus = self._clean_df_lyrics(df_corpus)
 
             if only_french_artist:

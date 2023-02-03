@@ -81,7 +81,7 @@ def get_artist_from_query(q: str):
 
 
 # get all songs from artist
-def get_all_songs_from_artist(artist_name, artist_id, try_how_many=10, sleep_sec=5, max_songs=None,
+def get_all_songs_from_artist(artist_name, artist_id, try_how_many=10, sleep_sec=15, max_songs=None,
                               include_features=False):
     if try_how_many > 0:
         try:

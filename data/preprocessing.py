@@ -4,8 +4,9 @@ from functools import partial
 from data.load_corpus import CorpusDataManager
 import spacy
 import pandas as pd
+from concurrent.futures import ThreadPoolExecutor
 # from pandarallel import pandarallel
-
+from glob import glob
 # pandarallel.initialize()
 from tqdm import tqdm
 
@@ -94,8 +95,6 @@ text = """[Intro] (Rohff)
     Du chagrin de son fils qu'elle    a vu sortir
     Pour plus jamais revenir
     """
-print(preprocess_genius_text(text, lower_case=True, lemmatization=False, stop_words_removal=False,
-                             punct_removal=True, tokenised_output=False, crop_first_lines=False))
 
 
 # %%
@@ -110,9 +109,10 @@ def preprocess_genius_lyrics_from_df(df, lemmatization=False, stop_words_removal
                               punct_removal=punct_removal, tokenised_output=tokenised_output,
                               crop_first_lines=crop_first_lines)
     column_name = "lyrics" if overwrite_lyrics_column else "lyrics_preprocessed"
-    df[column_name] = df['lyrics'].progress_apply(f_preprocessing)
+    #df[column_name] = df['lyrics'].progress_apply(f_preprocessing)
+    df[column_name] = df['lyrics'].apply(f_preprocessing)
     # df["lyrics_preprocessed"] = df['lyrics'].parallel_apply(f_preprocessing)
-    # df[lyrics_preprocessed"] = df['lyrics'].apply(f_preprocessing)
+
     return df
 
 
@@ -162,10 +162,36 @@ preprocess_and_save_df_to_csv(df, cdm.available_artists_ids_paths[id_], overwrit
 
 # %%
 
-query = f"{cdm.available_artists_ids_paths[id_]}/df_genius_*.csv"
-query = f"{cdm.available_artists_ids_paths[id_]}/*_preprocessed_*.csv"
-# get just the csv file in the directory
-from glob import glob
+# apply processing to all artists available
+def preprocess_all_available_artists(overwrite=False, lemmatization=False, stop_words_removal=False,
+                           stop_words_to_keep=None, punct_removal=False, tokenised_output=False,
+                           crop_first_lines=True):
+    ids = list(cdm.available_artists_ids_paths.keys())#[:20]
 
-files = glob(query)
-len(files), files
+    def do_task(id_):
+        df = cdm.get_df_artist_lyrics_by_genius_id(id_)
+
+        if df is not None and len(df) > 0:
+            return preprocess_and_save_df_to_csv(df, cdm.available_artists_ids_paths[id_], overwrite=overwrite,
+                                          lemmatization=lemmatization, stop_words_removal=stop_words_removal,
+                                          stop_words_to_keep=stop_words_to_keep, punct_removal=punct_removal,
+                                          tokenised_output=tokenised_output, crop_first_lines=crop_first_lines)
+
+        return None
+    
+    # use multithreading with 4 threads, concurrent.futures and display loading bar
+    with ThreadPoolExecutor(max_workers=8) as executor:
+        list(tqdm(executor.map(do_task, ids), total=len(ids)))
+
+
+
+# main
+if __name__ == '__main__':
+    print(preprocess_genius_text(text, lower_case=True, lemmatization=False, stop_words_removal=False,
+                                 punct_removal=True, tokenised_output=False, crop_first_lines=False))
+
+    preprocess_all_available_artists(overwrite=False, lemmatization=False, punct_removal=False,
+                                      tokenised_output=True,
+                                      crop_first_lines=True)
+
+
