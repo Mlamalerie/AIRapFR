@@ -17,7 +17,7 @@ GENIUS_API_TOKEN = "dj04TpKhldHudO8VnobaSSzXtuuZ2hbSgl1DW-1Jug6i1Tt33B0JjXhDzdAk
 genius = lyricsgenius.Genius(GENIUS_API_TOKEN)
 genius
 
-BACKUP_FOLDER_PATH = f"{os.path.dirname(__file__)}\datasets"
+BACKUP_FOLDER_PATH = f"{os.path.dirname(__file__)}\corpus"
 
 
 def get_artist_from_id(id):
@@ -147,7 +147,7 @@ def main():
 
     # Get all songs from artist
     songs = get_all_songs_from_artist(artist_name=ARTIST_NAME, artist_id=ARTIST_GENIUS_ID,
-                                      include_features=False)
+                                      include_features=False, max_songs=350)
     if not songs:
         print(f"No songs found (query={QUERY_ARTIST})")
         return

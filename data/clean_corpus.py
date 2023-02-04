@@ -1,5 +1,5 @@
 from glob import glob
-# get all dirs in datasets
+# get all dirs in corpus
 import os
 from tqdm import tqdm
 import argparse
@@ -28,10 +28,10 @@ def main() -> None:
     parser.add_argument("-y", "--yes", help="Delete all json files without asking for confirmation.", default=None)
     args = parser.parse_args()
 
-    datasets_dir = "datasets"
-    dirs = get_all_dirs(datasets_dir)
+    corpus_dir = "corpus"
+    dirs = get_all_dirs(corpus_dir)
     total_json_files = sum([len(get_all_json_files(dir)) for dir in dirs])
-    print(f"Found {len(dirs)} directories in {datasets_dir} -> {total_json_files} json files in total.")
+    print(f"Found {len(dirs)} directories in {corpus_dir} -> {total_json_files} json files in total.")
     if total_json_files == 0:
         return
     if args.yes:

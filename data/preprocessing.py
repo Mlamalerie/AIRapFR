@@ -16,12 +16,6 @@ nlp = spacy.load("fr_core_news_sm")
 # print(nlp.Defaults.stop_words)
 
 cdm = CorpusDataManager()
-df = cdm.get_df_artist_lyrics_by_name("rohff")
-df.shape
-
-# %%
-
-cdm.get_id_by_artist_name("Rohff")
 
 
 # %%
@@ -150,15 +144,16 @@ def preprocess_and_save_df_to_csv(df: pd.DataFrame, dir_path: str, overwrite=Fal
                                               tokenised_output=tokenised_output, crop_first_lines=crop_first_lines,
                                               overwrite_lyrics_column=True)
         df.to_csv(csv_file_path, index=False)
-        print("Saved preprocessed lyrics in {}.".format(csv_file_path))
+        #print("Saved preprocessed lyrics in {}.".format(csv_file_path))
         return csv_file_path
 
-
+"""
 id_ = cdm.get_id_by_artist_name("Rohff")
 preprocess_and_save_df_to_csv(df, cdm.available_artists_ids_paths[id_], overwrite=False, lemmatization=False,
                               stop_words_removal=False, stop_words_to_keep=[], punct_removal=False,
                               tokenised_output=True,
                               crop_first_lines=True)
+"""
 
 # %%
 
@@ -187,11 +182,10 @@ def preprocess_all_available_artists(overwrite=False, lemmatization=False, stop_
 
 # main
 if __name__ == '__main__':
-    print(preprocess_genius_text(text, lower_case=True, lemmatization=False, stop_words_removal=False,
-                                 punct_removal=True, tokenised_output=False, crop_first_lines=False))
-
-    preprocess_all_available_artists(overwrite=False, lemmatization=False, punct_removal=False,
+    print("Preprocessing all available artists...")
+    preprocess_all_available_artists(overwrite=False, lemmatization=False, punct_removal=True,
                                       tokenised_output=True,
                                       crop_first_lines=True)
+    print("Done.")
 
 
