@@ -10,6 +10,7 @@ import requests
 import pandas as pd
 import lyricsgenius
 from bs4 import BeautifulSoup as bs
+from data.load_corpus import CorpusDataManager
 
 from utils import create_dir, compare_str
 
@@ -104,10 +105,15 @@ def write_songs_to_json(songs, overwrite=True):
         song.save_lyrics(extension='json', overwrite=overwrite, ensure_ascii=False, sanitize=True, verbose=True)
 
 
-def move_all_lyrics_json_file(where):
-    if files := glob('[Ll]yrics_*.json', recursive=True):
+def move_all_lyrics_json_file(where, artist_name=""):
+    if files := glob(f'[Ll]yrics_{artist_name}*.json', recursive=True):
         for file_json in files:
-            shutil.move(file_json, f"{where}/{file_json}")
+            # move and check if file moved
+            try:
+                shutil.move(file_json, f"{where}/{file_json}")
+            except Exception as e:
+                raise f'Error move {file_json} : {e}'
+
     return where
 
 
@@ -124,6 +130,7 @@ def get_df_from_all_json_files(dir_path):
 
 
 def main():
+    cdm = CorpusDataManager()
     # Arguments
     parser = argparse.ArgumentParser()
     parser.add_argument('-qa', "--query-artist", help='The artist', required=False, default=None)
@@ -142,7 +149,8 @@ def main():
             QUERY_ARTIST_ID)  # todo verify if artist is found and dict is have correct key
     if artist_found is None:
         return
-    ARTIST_GENIUS_ID = artist_found["id"]
+
+    ARTIST_GENIUS_ID = artist_found["artist"]["id"]
     ARTIST_NAME = artist_found["name"]
 
     # Get all songs from artist
@@ -153,14 +161,19 @@ def main():
         return
 
     # Get all songs from artist
+    artist_name_ = re.sub('[^A-Za-z0-9é]+', '', ARTIST_NAME.lower())
     where_dir_json = create_dir(BACKUP_FOLDER_PATH,
-                                f"genius-{ARTIST_GENIUS_ID}-{re.sub('[^A-Za-z0-9é]+', '', ARTIST_NAME.lower())}")
+                                f"genius-{ARTIST_GENIUS_ID}-{artist_name_}")
+
+    if cdm.available_artists_ids_names.get(ARTIST_GENIUS_ID) and not OVERWRITE:
+        print(f"Artist {ARTIST_GENIUS_ID} already in corpus")
+        return
 
     # write all songs to json files
     write_songs_to_json(songs, overwrite=OVERWRITE)
 
     # move all json files to backup folder
-    where_dir_json = move_all_lyrics_json_file(where_dir_json)
+    where_dir_json = move_all_lyrics_json_file(where_dir_json, artist_name_)
 
     # Get all json files from backup folder, and create a dataframe
     df_all_songs = get_df_from_all_json_files(where_dir_json)
@@ -168,7 +181,7 @@ def main():
     if "album.name" in df_all_songs.columns:
         columns_for_sort.append("album.name")
     df_all_songs.sort_values(by=columns_for_sort, inplace=True)
-    df_output_file = f"""{where_dir_json}/df_genius_{re.sub('[^A-Za-z0-9]+', '', ARTIST_NAME.lower())}_all_songs_{datetime.now().strftime("%Y%m")}.csv"""
+    df_output_file = f"""{where_dir_json}/df_genius_{artist_name_}_all_songs_{datetime.now().strftime("%Y%m")}.csv"""
 
     df_all_songs.to_csv(df_output_file, index=False)
     print(f"-> dataframe with {df_all_songs.shape[0]} songs, by {ARTIST_NAME} : '{df_output_file}'")

@@ -195,7 +195,7 @@ def main() -> None:
     print(">>>>>> 1.3. Saving dataset with pickle...")
 
     # get now datetime format YYYYMMDD
-    now_str = datetime.now().strftime("%Y%m%d%H")
+    now_str = datetime.now().strftime("%Y%m%d")
     dataset_name = f"dataset"
     if artist_id:
         dataset_name += f"_{corpus_mng.get_artist_name_by_id(artist_id)}"

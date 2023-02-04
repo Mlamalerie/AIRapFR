@@ -58,18 +58,7 @@ def main() -> None:
     diff = ids_todo.difference(ids_done)
     print(f"ids: {len(ids_done) / len(ids_todo):.2%}")
 
-    for query in queries_todo:
-        if not is_already_done(query):
-            script = f'python lyrics_scrapper.py -qa "{query}"'
-            print(f" * Start of script * : '{script}'")
-            if os.system(script) == 0:
-                print(f" ** End of script ** : '{script}'")
-                add_to_done_list(query, "queries")
-            else:
-                print(f" * Error in script * : '{script}'")
-
-    sort_text_file("todo/queries_done.txt")
-    sort_text_file("todo/queries_todo.txt")
+    # ---- RUN SCRIPTS
 
     for id in ids_todo:
         if not is_already_done(id, "ids"):
@@ -83,6 +72,21 @@ def main() -> None:
 
     sort_text_file("todo/ids_done.txt")
     sort_text_file("todo/ids_todo.txt")
+
+    for query in queries_todo:
+        if not is_already_done(query):
+            script = f'python lyrics_scrapper.py -qa "{query}"'
+            print(f" * Start of script * : '{script}'")
+            if os.system(script) == 0:
+                print(f" ** End of script ** : '{script}'")
+                add_to_done_list(query, "queries")
+            else:
+                print(f" * Error in script * : '{script}'")
+
+    sort_text_file("todo/queries_done.txt")
+    sort_text_file("todo/queries_todo.txt")
+
+
 
 
 if __name__ == '__main__':

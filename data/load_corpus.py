@@ -42,8 +42,8 @@ class CorpusDataManager():
                 .split("-")[-1]
                 for dir_path in dirs
             }, {
-                os.path.basename(dir_path)
-                .split("-")[1]: dir_path
+                int(os.path.basename(dir_path)
+                .split("-")[1]): dir_path
                 for dir_path in dirs
             }
         return None, None
