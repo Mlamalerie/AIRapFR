@@ -1,5 +1,5 @@
 import os
-
+import time
 
 def sort_text_file(file_path: str):
     with open(file_path, encoding='utf-8') as f:
@@ -69,6 +69,7 @@ def main() -> None:
                 add_to_done_list(id, "ids")
             else:
                 print(f" * Error in script * : '{script}'")
+                time.sleep(1)
 
     sort_text_file("todo/ids_done.txt")
     sort_text_file("todo/ids_todo.txt")
@@ -82,6 +83,7 @@ def main() -> None:
                 add_to_done_list(query, "queries")
             else:
                 print(f" * Error in script * : '{script}'")
+                time.sleep(1)
 
     sort_text_file("todo/queries_done.txt")
     sort_text_file("todo/queries_todo.txt")

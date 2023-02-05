@@ -104,15 +104,26 @@ def write_songs_to_json(songs, overwrite=True):
         # filename_path = os.path.join(dir_path,f"lyrics_{song.id}_{artist_}_{title_}")
         song.save_lyrics(extension='json', overwrite=overwrite, ensure_ascii=False, sanitize=True, verbose=True)
 
+# delete all json files
+def delete_all_json_files(dir_path):
+    files = glob(f'{dir_path}/[Ll]yrics_*.json', recursive=True)
+    for file in files:
+        os.remove(file)
 
-def move_all_lyrics_json_file(where, artist_name=""):
+def move_all_lyrics_json_file(where, artist_name="", overwrite=True):
     if files := glob(f'[Ll]yrics_{artist_name}*.json', recursive=True):
         for file_json in files:
-            # move and check if file moved
-            try:
-                shutil.move(file_json, f"{where}/{file_json}")
-            except Exception as e:
-                raise f'Error move {file_json} : {e}'
+            # verify if file already exist
+            new_path = f"{where}/{file_json}"
+            is_already_exist = os.path.isfile(new_path)
+            if is_already_exist:
+                print(f"File {file_json} already exist in {where}")
+                if overwrite:
+                    os.remove(new_path) # remove file
+                else:
+                    continue
+
+            shutil.move(file_json,new_path) # move file
 
     return where
 
@@ -128,8 +139,24 @@ def get_df_from_all_json_files(dir_path):
     dfs = [get_df_from_one_json_file(json_path) for json_path in files]
     return pd.concat(dfs, ignore_index=True)
 
+def check_dir_content(dir_path):
+    # verifiy if dir is empty (no json files)
+    no_jsons_in_dir = False
+    if not glob(f'{dir_path}/[Ll]yrics_*.json', recursive=True):
+        no_jsons_in_dir = True
+
+    # verify if dir is empty (no csv file)
+    no_csv_concat_in_dir = False
+    if not glob(f'{dir_path}/df_genius*.csv', recursive=True):
+        no_csv_concat_in_dir = True
+
+    return no_jsons_in_dir, no_csv_concat_in_dir
 
 def main():
+    base_root_path = os.path.dirname(os.path.abspath(__file__))
+    # delete all json files
+    delete_all_json_files(base_root_path)
+    # -------------------------------------------------
     cdm = CorpusDataManager()
     # Arguments
     parser = argparse.ArgumentParser()
@@ -150,12 +177,12 @@ def main():
     if artist_found is None:
         return
 
-    ARTIST_GENIUS_ID = artist_found["artist"]["id"]
-    ARTIST_NAME = artist_found["name"]
+    ARTIST_GENIUS_ID = artist_found["artist"]["id"] if "artist" in artist_found.keys() else artist_found["id"]
+    ARTIST_NAME = artist_found["artist"]["name"] if "artist" in artist_found.keys() else artist_found["name"]
 
     # Get all songs from artist
     songs = get_all_songs_from_artist(artist_name=ARTIST_NAME, artist_id=ARTIST_GENIUS_ID,
-                                      include_features=False, max_songs=350)
+                                      include_features=False, max_songs=300)
     if not songs:
         print(f"No songs found (query={QUERY_ARTIST})")
         return
@@ -173,18 +200,22 @@ def main():
     write_songs_to_json(songs, overwrite=OVERWRITE)
 
     # move all json files to backup folder
-    where_dir_json = move_all_lyrics_json_file(where_dir_json, artist_name_)
+    where_dir_json = move_all_lyrics_json_file(where_dir_json, artist_name_, overwrite=OVERWRITE)
 
-    # Get all json files from backup folder, and create a dataframe
-    df_all_songs = get_df_from_all_json_files(where_dir_json)
-    columns_for_sort = ["release_date_components.year"]
-    if "album.name" in df_all_songs.columns:
-        columns_for_sort.append("album.name")
-    df_all_songs.sort_values(by=columns_for_sort, inplace=True)
-    df_output_file = f"""{where_dir_json}/df_genius_{artist_name_}_all_songs_{datetime.now().strftime("%Y%m")}.csv"""
+    # check if dir is empty
+    no_jsons_in_dir, no_csv_concat_in_dir = check_dir_content(where_dir_json)
+    if no_jsons_in_dir:
+        print(f"No json files in {where_dir_json}")
+        return
 
-    df_all_songs.to_csv(df_output_file, index=False)
-    print(f"-> dataframe with {df_all_songs.shape[0]} songs, by {ARTIST_NAME} : '{df_output_file}'")
+    if no_csv_concat_in_dir or (not no_csv_concat_in_dir and OVERWRITE):
+        # Get all json files from backup folder, and create a dataframe
+        df_all_songs = get_df_from_all_json_files(where_dir_json)
+
+        df_output_file = f"""{where_dir_json}/df_genius_{artist_name_}_all_songs_{datetime.now().strftime("%Y%m")}.csv"""
+
+        df_all_songs.to_csv(df_output_file, index=False)
+        print(f"-> dataframe with {df_all_songs.shape[0]} songs, by {ARTIST_NAME} : '{df_output_file}'")
 
 
 if __name__ == "__main__":
