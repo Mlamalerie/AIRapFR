@@ -79,8 +79,10 @@ class CorpusDataManager():
         for col in ["language", "title", "album.name", "artist_names"]:
             if col in df.columns:
                 df[col] = df[col].astype(str)
-            elif col in self.columns_we_need:  # if we need it but it's not in the df
-                self.columns_we_need.remove(col)
+
+        for col in self.columns_we_need:  # if we need it but it's not in the df
+            if col not in df.columns:
+                df[col] = np.nan
 
         # int dtype={'id': 'Int64'} date, datetime ect
 
@@ -91,6 +93,7 @@ class CorpusDataManager():
         df = df.sort_values(
             by=[col for col in ['primary_artist.id', 'album.name', 'release_date_components.year', 'title'] if
                 col in df.columns]).reset_index(drop=True)
+
 
         if "release_date_components.year" in df.columns:
             df["release_date_components.year"] = df["release_date_components.year"].where(

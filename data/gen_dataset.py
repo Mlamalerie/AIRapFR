@@ -8,11 +8,12 @@ import os
 from tqdm import tqdm
 from utils import create_dir
 from datetime import datetime
+from glob import glob
 
-# Parameters
-PREPROCESSING_PUNCT_REMOVAL = False
+# Parameters -----------------
+PREPROCESSING_PUNCT_REMOVAL = True
 PREPROCESSING_TOKENISED_OUTPUT = True
-MAX_YEAR_FILTER = 2010
+MAX_YEAR_FILTER = 2015
 
 BOOL_IGNORE_WORD = True
 MIN_WORD_FREQUENCY = 2
@@ -23,6 +24,7 @@ PERCENTAGE_TEST = 0.1
 
 ARTIST_NAME_FOCUS = "Kery James"
 
+# ----------------------------
 DIR_PATH = os.path.dirname(os.path.realpath(__file__)) + "/datasets"
 
 
@@ -74,7 +76,7 @@ def generate_sentences_next_words_dataset(corpus_tokens, ignored_set_words=set()
         next_word = corpus_tokens[i + max_sentence_length]
 
         # Only add sequences where no word is in ignored_words
-        if not set(sentence).intersection(ignored_set_words):
+        if len(set(sentence + [next_word]).intersection(ignored_set_words)) == 0:
             sentences.append(sentence)
             next_words.append(next_word)
         else:
@@ -142,20 +144,13 @@ def generate_dataset_from_corpus(df_corpus: pd.DataFrame, max_year_filter: int =
 
 def save_dataset_with_pickle(dir_path, name, sentences_train, next_words_train, sentences_test, next_words_test,
                              set_words, word_index_dict, index_word_dict, len_dataset, params_str):
-    file_path = os.path.join(dir_path, name + "__" + params_str + ".pickle")
+    file_path = os.path.join(dir_path, name + "__" + params_str + ".pkl")
     # save dataset with pickle
     with open(file_path, 'wb') as f:
         pickle.dump((sentences_train, next_words_train, sentences_test, next_words_test, set_words, word_index_dict,
-                     index_word_dict, len_dataset, params_str), f)
+                     index_word_dict, len_dataset), f)
     return file_path
 
-
-def load_dataset_with_pickle(file_path):
-    # load dataset with pickle
-    with open(file_path, 'rb') as f:
-        sentences_train, next_words_train, sentences_test, next_words_test, set_words, word_index_dict, index_word_dict, len_dataset, params_str = pickle.load(
-            f)
-    return sentences_train, next_words_train, sentences_test, next_words_test, set_words, word_index_dict, index_word_dict, len_dataset, params_str
 
 
 def main() -> None:
@@ -198,8 +193,8 @@ def main() -> None:
     now_str = datetime.now().strftime("%Y%m%d")
     dataset_name = f"dataset"
     if artist_id:
-        dataset_name += f"_{corpus_mng.get_artist_name_by_id(artist_id)}"
-    dataset_name += f"_{now_str}"
+        dataset_name += f"-{artist_id}-{corpus_mng.get_artist_name_by_id(artist_id)}"
+    dataset_name += f"-{now_str}"
 
     file_path = save_dataset_with_pickle(dir_path=create_dir(DIR_PATH, dataset_name), name="rap_corpus",
                                          sentences_train=sentences_train,
@@ -225,7 +220,6 @@ def main() -> None:
     if PREPROCESSING_PUNCT_REMOVAL:
         corpus_params_str += "rmpunct_"
 
-
     # 2.2. generate rap corpus dataset sentences & next word
     print(f">>>>>> 2.2. Generating {ARTIST_NAME_FOCUS} corpus dataset sentences & next word...")
     sentences_train_artist, next_words_train_artist, sentences_test_artist, next_words_test_artist, set_words_artist, word_index_dict_artist, index_word_dict_artist, len_dataset_artist, params_str_artist = generate_dataset_from_corpus(
@@ -234,18 +228,24 @@ def main() -> None:
 
     # 2.3. save dataset with pickle
     print(f">>>>>> 2.3. Saving {ARTIST_NAME_FOCUS} dataset with pickle...")
-    file_path = save_dataset_with_pickle(dir_path=create_dir(DIR_PATH, dataset_name), name=corpus_mng.get_artist_name_by_id(artist_id), sentences_train=sentences_train_artist, next_words_train=next_words_train_artist, sentences_test=sentences_test_artist, next_words_test=next_words_test_artist, set_words=set_words_artist, word_index_dict=word_index_dict_artist, index_word_dict=index_word_dict_artist, len_dataset=len_dataset_artist, params_str=f"{corpus_params_str}_{params_str_artist}")
+    file_path = save_dataset_with_pickle(dir_path=create_dir(DIR_PATH, dataset_name),
+                                         name=corpus_mng.get_artist_name_by_id(artist_id),
+                                         sentences_train=sentences_train_artist,
+                                         next_words_train=next_words_train_artist, sentences_test=sentences_test_artist,
+                                         next_words_test=next_words_test_artist, set_words=set_words_artist,
+                                         word_index_dict=word_index_dict_artist, index_word_dict=index_word_dict_artist,
+                                         len_dataset=len_dataset_artist,
+                                         params_str=f"{corpus_params_str}_{params_str_artist}")
     print(f"Dataset saved with pickle at : {file_path}")
 
-    # 3. Fuse sets
+    # 3.1 Fuse sets
     print(f">>>>>> 3. Fusing sets...")
     set_words_union = set_words.union(set_words_artist)
     word_index_dict_union = {word: index for index, word in enumerate(set_words_union)}
 
-    # save word_index_dict_union object with pickle
-    pickle.dump(word_index_dict_union, open(os.path.join(create_dir(DIR_PATH, dataset_name), "word_index_dict_union.pkl"), "wb"))
-
-
+    # 3.2 save word_index_dict_union object with pickle
+    pickle.dump(word_index_dict_union,
+                open(os.path.join(create_dir(DIR_PATH, dataset_name), "word_index_dict_union.pkl"), "wb"))
 
 
 if __name__ == "__main__":

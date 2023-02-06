@@ -68,7 +68,7 @@ def main() -> None:
         if args.force:
             response = "y"
         else:
-            response = input(f"Do you want to create csv concat for {total_dir_with_no_csv_concat} directories? (y/n) ")
+            response = input(f"Do you want to check and create csv concat for this {total_dir_with_no_csv_concat} directories? (y/n) ")
 
         if response == "y":
             check_all_dirs_and_create_csv_concat(dir_paths_corpus)
