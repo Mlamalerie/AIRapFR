@@ -1,6 +1,7 @@
 secrets
 data/corpus/
 data/datasets/
+ai/models/
 
 ### Python template
 
