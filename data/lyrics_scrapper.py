@@ -7,9 +7,10 @@ import shutil
 import time
 import re
 import requests
+from bs4 import BeautifulSoup as bs
 import pandas as pd
 import lyricsgenius
-from bs4 import BeautifulSoup as bs
+
 from data.load_corpus import CorpusDataManager
 
 from utils import create_dir, compare_str

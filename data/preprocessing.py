@@ -31,7 +31,7 @@ def slice_lines(text, deb=None, fin=None):
 
 
 def tokens_2_str(tokens: list) -> str:
-    return " ".join(tokens).strip().replace("' ", "'").replace(" - ", "-").replace(" ,", ",").replace("\n ", "\n")
+    return " ".join(tokens).strip().replace("' ", "'").replace(" -", "-").replace("- ", "-").replace(" ,", ",").replace("\n ", "\n").replace("’", "'")
 
 
 # main function to preprocess text, with parameters to choose which preprocessing steps to apply
@@ -52,7 +52,13 @@ def preprocess_genius_text(text, lower_case=True, lemmatization=False, stop_word
     text = re.sub('[ ]+', ' ', text)
     text = re.sub('[\n]+', '\n', text)
     text = re.sub('\n ', '\n', text)
+    # ’ => '
+    text = text.replace("’", "'")
+    # œ => oe, ô => o, etc.
     tokens = list(nlp(text))
+
+
+
 
     # todo : manage contractions (j' => je, c' => ce, etc.)
 

@@ -22,7 +22,7 @@ STEP = 1
 
 PERCENTAGE_TEST = 0.1
 
-ARTIST_NAME_FOCUS = "Kery James"
+ARTIST_NAME_FOCUS = "Rohff"
 
 # ----------------------------
 DIR_PATH = os.path.dirname(os.path.realpath(__file__)) + "/datasets"
@@ -163,7 +163,7 @@ def main() -> None:
     corpus_mng = CorpusDataManager()
     artist_id = None
     if ARTIST_NAME_FOCUS is not None:
-        artist_id = corpus_mng.get_id_by_artist_name(ARTIST_NAME_FOCUS)
+        artist_id = corpus_mng.get_id_from_artist_name(ARTIST_NAME_FOCUS)
 
     df_rap_fr_corpus = corpus_mng.get_full_df_lyrics_corpus(preprocessed=True,
                                                             only_french_artist=True,
@@ -223,7 +223,7 @@ def main() -> None:
     # 2.2. generate rap corpus dataset sentences & next word
     print(f">>>>>> 2.2. Generating {ARTIST_NAME_FOCUS} corpus dataset sentences & next word...")
     sentences_train_artist, next_words_train_artist, sentences_test_artist, next_words_test_artist, set_words_artist, word_index_dict_artist, index_word_dict_artist, len_dataset_artist, params_str_artist = generate_dataset_from_corpus(
-        df_corpus, max_year_filter=MAX_YEAR_FILTER, bool_ignore_word=BOOL_IGNORE_WORD,
+        df_corpus, max_year_filter=MAX_YEAR_FILTER, bool_ignore_word=False,
         min_word_frequency=MIN_WORD_FREQUENCY, max_sentence_length=MAX_SENTENCE_LENGTH, percentage_test=PERCENTAGE_TEST)
 
     # 2.3. save dataset with pickle
@@ -242,7 +242,7 @@ def main() -> None:
     print(f">>>>>> 3. Fusing sets...")
     set_words_union = set_words.union(set_words_artist)
     word_index_dict_union = {word: index for index, word in enumerate(set_words_union)}
-
+    print(f"set_words_union : {len(set_words_union)}")
     # 3.2 save word_index_dict_union object with pickle
     pickle.dump(word_index_dict_union,
                 open(os.path.join(create_dir(DIR_PATH, dataset_name), "word_index_dict_union.pkl"), "wb"))

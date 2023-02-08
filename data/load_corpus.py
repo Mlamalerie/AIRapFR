@@ -48,7 +48,7 @@ class CorpusDataManager():
             }
         return None, None
 
-    def get_id_by_artist_name(self, artist_name: str) -> int:
+    def get_id_from_artist_name(self, artist_name: str) -> int:
         artist_name = re.sub('[^A-Za-z0-9é]+', '', artist_name.lower())
         if artist_name in self.available_artists_names_ids:
             return self.available_artists_names_ids[artist_name]
