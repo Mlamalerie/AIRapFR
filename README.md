@@ -16,15 +16,34 @@
   <img src="images/2ac492cb-b3b1-4e42-a749-70a511e34e37.jpg" width="500" alt="App Logo of Rapping robot with microphone in hand">
 </div>
 
-## Usage
+## Description
 
-Use this space to show useful examples of how a project can be used.
-Additional screenshots, code examples and demos
-work well in this space. You may also link to more resources.
+AiRapFR is a text generator, producing sentences and couplets of rap in French, inspired by the style, structure and
+themes addressed by French rappers.
 
-_For more examples, please refer to the [Documentation](https://example.com)_
+On the streamlit demo, you can generate a text by :
 
-#todo : add gif
+1. **Choosing the artist** you want to be inspired
+2. **The model** you want to use (Markov, LSTM or GPT-2)
+3. **The number of words** you want to generate and **the temperature** of the model.
+
+## Requirements
+
+````
+pip install -r requirements.txt
+````
+
+## Execution
+
+1. Make sure you have installed the above prerequisites
+2. Download or clone this repository to your computer
+3. Open a terminal and go to the application directory
+4. Run the command `streamlit run app.py`.
+
+You should now see the application running 🚀 !
+
+![App Screenshot](images%2Fscreen_app_11022023.gif)
+
 ## Acknowledgments
 
 * [Genius API](https://docs.genius.com)

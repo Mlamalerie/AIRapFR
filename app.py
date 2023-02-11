@@ -319,12 +319,12 @@ with MarkovTab:
 
 
 with LSTMTab:
-    st.subheader("LSTM")
-    st.markdown(
-        """
-        Basé sur le modèle LSTM.
-        """
-    )
+    #st.subheader("LSTM")
+    #st.markdown(
+    #    """
+    #    Basé sur le modèle LSTM.
+    #    """
+    #)
 
     submit_button, result_form, generated_text = generator_section(model_name="lstm")
 
