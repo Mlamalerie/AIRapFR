@@ -16,13 +16,13 @@ PREPROCESSING_TOKENISED_OUTPUT = True
 MAX_YEAR_FILTER = 2015
 
 BOOL_IGNORE_WORD = True
-MIN_WORD_FREQUENCY = 2
+MIN_WORD_FREQUENCY = 6
 MAX_SENTENCE_LENGTH = 10
 STEP = 1
 
 PERCENTAGE_TEST = 0.1
 
-ARTIST_NAME_FOCUS = "Rohff"
+ARTIST_NAME_FOCUS = "kery james"
 
 # ----------------------------
 DIR_PATH = os.path.dirname(os.path.realpath(__file__)) + "/datasets"
@@ -46,6 +46,8 @@ def get_tokens_from_preprocessed_df(df_corpus: pd.DataFrame, min_word_frequency=
     print('Unique words before ignoring:', len(set_words))
     ignored_set_words = set()
     table_tokens_value_counts = df_lyrics_explode.value_counts()
+    print(f"Mean {table_tokens_value_counts.mean()} - Median {table_tokens_value_counts.median()} - Q(0.25) {table_tokens_value_counts.quantile(0.25)} - Q(0.75) {table_tokens_value_counts.quantile(0.75)}")
+
     if bool_ignore_word:
         ignored_set_words = set(
             table_tokens_value_counts[table_tokens_value_counts < min_word_frequency].index.tolist())
@@ -57,9 +59,11 @@ def get_tokens_from_preprocessed_df(df_corpus: pd.DataFrame, min_word_frequency=
 
     # display head of table and tail of table (to dict)
     print("Head of table:")
-    print(table_tokens_value_counts.head().to_dict())
+    table_tokens_value_counts_filtered = table_tokens_value_counts[table_tokens_value_counts >= min_word_frequency]
+    print(table_tokens_value_counts_filtered.head(10).to_dict())
     print("Tail of table:")
-    print(table_tokens_value_counts.tail().to_dict())
+    print(table_tokens_value_counts_filtered.tail(10).to_dict())
+    print(f"Mean {table_tokens_value_counts_filtered.mean()} - Median {table_tokens_value_counts_filtered.median()} - Q(0.25) {table_tokens_value_counts_filtered.quantile(0.25)} - Q(0.75) {table_tokens_value_counts_filtered.quantile(0.75)}")
 
     return corpus_tokens, set_words, ignored_set_words
 
@@ -107,7 +111,7 @@ def split_training_and_test_set(sentences_original, next_original, percentage_te
 
 
 def get_word_index_dict(set_words):
-    word_index_dict = {c: i for i, c in enumerate(set_words)}
+    word_index_dict = {c: i+1 for i, c in enumerate(set_words)}
     index_word_dict = dict(enumerate(set_words))
     return word_index_dict, index_word_dict
 

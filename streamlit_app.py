@@ -1,12 +1,17 @@
+import os
+
 import streamlit as st
 import requests
 import pandas as pd
+import tensorflow as tf
 import numpy as np
+import pickle
 from ai.markov_chain import MarkovChainLyricsGenerator, load_markov_model_from_disk
 from ai.dummy import DummyLyricsGenerator, load_dummy_model_from_disk
 from glob import glob
 from datetime import datetime
 from vulgar_words import censor_vulgar_text,is_vulgar_text, censor_vulgar_text
+from data.preprocessing import tokens_2_str
 
 from data.load_corpus import CorpusDataManager
 
@@ -73,9 +78,45 @@ if not "valid_inputs_received" in st.session_state:
 # tabs
 
 
-DummyTab, MarkovTab, LSTMTab, GPT2Tab = st.tabs(["Dummy", "Markov", "LSTM", "GP2-T"])
+DummyTab, MarkovTab, LSTMTab, GPT2Tab = st.tabs(["Dummy", "Markov", "LSTM", "GPT-2"])
+
+def sample(preds, temperature=1.0):
+    preds = np.asarray(preds).astype('float64')
+    preds = np.where(preds == 0, 1e-8, preds) # remplacer toutes les valeurs égales à zéro par une petite valeur proche de zéro
+    preds = np.log(preds) / temperature
+    exp_preds = np.exp(preds)
+    preds = exp_preds / np.sum(exp_preds)
+    probas = np.random.multinomial(1, preds, 1) #todo : prendre le deuxième
+    index_max_1 = np.argmax(probas)
+
+    # Trier les prédictions pour obtenir les indices des deux plus grands éléments
+    sorted_indices = np.argsort(preds)[::-1][:2]
+
+    return sorted_indices[0], sorted_indices[1]
 
 
+def generate_text(model, starting_words,window_size, words_indices, indices_words, max_length=50, diversity=1):
+    assert max_length > len(starting_words),f"max_length {max_length} must > len(starting_words) {len(starting_words)}"
+    length = max_length - len(starting_words)
+
+    generated = starting_words#[:]
+    sentence = starting_words[-window_size:]
+    for i in range(length):
+        x_pred = np.zeros((1, window_size, len(words_indices)))
+        #print(sentence)
+        for t, word in enumerate(sentence):
+            x_pred[0, t, words_indices[word]] = 1.
+
+        preds = model.predict(x_pred, verbose=0)[0]
+
+        next_index, else_next_index = sample(preds, diversity)
+        #print([indices_words[next_index],indices_words[else_next_index]])
+        #next_word = indices_words[else_next_index if sentence[-1] == "\n" and indices_word[next_index] == "\n"  else next_index]
+        next_word = indices_words[next_index]
+        #print(generated)
+        generated.append(next_word)
+        sentence = sentence[-(window_size-1):] + [next_word]
+    return tokens_2_str(generated,remove_extra_nlines=True)
 
 
 # generate a text
@@ -142,6 +183,7 @@ def form(model_name):
 
         submit_button = st.form_submit_button(label="Submit")
 
+
     return submit_button,result
 
 def generate_next_text_by_model_name(model_name,start_text, artist_name, max_length):
@@ -161,6 +203,18 @@ def generate_next_text_by_model_name(model_name,start_text, artist_name, max_len
             #st.success(f"🤖 {markov_model}")
             generated_next_text = markov_model.generate_text(start_text, max_len=max_length, return_with_starting_sent=False)
 
+    elif model_name == "lstm":
+        lstm_model_path = "ai/models/lstm/model_lstm_1_keryjames.hdf5"
+        # import word dictionary (with pickle)
+        with open("data/datasets/dataset-1273-keryjames-20230208/word_index_dict_union.pkl", "rb") as f:
+            word_indices = pickle.load(f)
+        indices_word = {v: k for k, v in word_indices.items()}
+        if os.path.exists(lstm_model_path):
+            lstm_model = tf.keras.models.load_model(lstm_model_path)
+
+            #st.success(f"🤖 {lstm_model}")
+            generated_next_text = generate_text(lstm_model,start_text.lower().split(),window_size=10, words_indices=word_indices, indices_words=indices_word, max_length=max_length,diversity=0.8)
+
 
     return generated_next_text
 def generator_section(model_name):
@@ -176,29 +230,33 @@ def generator_section(model_name):
     # Now, let us add conditional statements to check if users have entered valid inputs.
     # E.g. If the user has pressed the 'submit button without text, without labels, and with only one label etc.
     # The app will display a warning message.
-
-    if not st.session_state.valid_inputs_received: # not submit_button and
-        st.stop()
-
-    elif submit_button and not start_text:
+    print("*"*100)
+    print("submit_button",submit_button)
+    print(result_form)
+    print("st.session_state.valid_inputs_received",st.session_state.valid_inputs_received)
+    if submit_button and not start_text:
         st.warning("🤖 You have not entered any text as input")
         st.session_state.valid_inputs_received = False
+        print("You have not entered any text as input")
         st.stop()
 
     elif submit_button and not artist_name:
         st.warning("🤖 You have not selected an artist")
         st.session_state.valid_inputs_received = False
+        print("You have not selected an artist")
         st.stop()
 
     elif submit_button and not max_length:
         st.warning("🤖 You have not selected a max length")
         st.session_state.valid_inputs_received = False
+        print("You have not selected a max length")
         st.stop()
 
 
     elif submit_button or st.session_state.valid_inputs_received:
-
+        print("@"*100)
         if submit_button:
+
 
             # The block of code below if for our session state.
             # This is used to store the user's inputs so that they can be used later in the app.
@@ -207,7 +265,7 @@ def generator_section(model_name):
             generated_next_text = generate_next_text_by_model_name(model_name,start_text, artist_name, max_length)
             #print("##",generated_next_text)
 
-            generated_text = f"{start_text} {generated_next_text}"
+            generated_text = f"{start_text} {generated_next_text}" if model_name not in ["lstm"] else generated_next_text
 
             st.markdown("### Résultat : ")
             st.caption(f"Le texte généré est affiché ci-dessous fait environ {len(generated_text.split())} mots.")
@@ -233,16 +291,6 @@ def generator_section(model_name):
 
     return submit_button, result_form, generated_text
 
-with MarkovTab:
-
-    st.subheader("Markov")
-    st.markdown(
-        """
-        > Basé sur la chaîne de Markov. """
-    )
-    submit_button, result_form, generated_text = generator_section(model_name="markov")
-
-
 
 with DummyTab:
 
@@ -258,9 +306,54 @@ with DummyTab:
 
     submit_button, result_form, generated_text = generator_section(model_name="dummy")
 
+with MarkovTab:
+
+    st.subheader("Markov")
+    st.markdown(
+        """
+        Basé sur la chaîne de Markov.
+        """
+    )
+
+    submit_button, result_form, generated_text = generator_section(model_name="markov")
 
 
-with st.expander("A propos"):
+with LSTMTab:
+    st.subheader("LSTM")
+    st.markdown(
+        """
+        Basé sur le modèle LSTM.
+        """
+    )
+
+    submit_button, result_form, generated_text = generator_section(model_name="lstm")
+
+with GPT2Tab:
+    st.subheader("GPT2")
+    st.markdown(
+        """
+        Basé sur le modèle GPT2. 
+        """
+    )
+
+    submit_button, result_form, generated_text = generator_section(model_name="gpt2")
+
+
+
+with st.expander("💯 - Evaluation des résultats"):
+    st.markdown(
+        """
+        Il existe plusieurs façons d'évaluer nos modèles de génération de texte, chacun ayant ses propres avantages et inconvénients. 
+        Voici les deux méthodes que j'ai utilisées pour évaluer les performances de mes modèles :
+        
+        - **Evaluation par human judgment** : Cette méthode consiste à demander à un panel d'experts ou de personnes non spécialisées de juger la qualité des textes générés. Les participants peuvent noter les textes sur une échelle de qualité ou les classer par ordre de qualité. Pour ce faire j'ai conçu un formulaire Google Forms qui permet aux participants de noter les textes générés par les modèles ([Lien vers le formulaire](https://docs.google.com/forms/d/e/1FAIpQLScNivr7uYF3UwK5JoiLYp_ZjpaO8xVz0lasNvlo-oNbZ4-7Dw/viewform?usp=sf_link)).
+        - **BLEU score** : Le score BLEU est une mesure de la qualité d'un texte généré par rapport à un texte de référence. On mesure la similitude entre un texte généré et un corpus de référence en utilisant des n-grammes communs.  Les scores de BLEU varient de 0 à 1, où 1 représente une correspondance parfaite entre les textes générés et le corpus de référence. Un score élevé signifie que les textes générés sont similaires au corpus de référence, ce qui peut être considéré comme un indicateur de qualité.
+        
+        En combinant les deux méthodes d'évaluation, nous pouvons obtenir une idée plus précise te complète de la qualité de nos modèles de génération de texte.
+        """
+    )
+
+with st.expander("ℹ - A propos"):
     st.markdown(
         """
         Ce projet a été réalisé par [Mlamali SAID SALIMO](https://www.linkedin.com/in/mlamalisaidsalimo/).

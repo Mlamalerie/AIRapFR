@@ -30,8 +30,12 @@ def slice_lines(text, deb=None, fin=None):
     return text
 
 
-def tokens_2_str(tokens: list) -> str:
-    return " ".join(tokens).strip().replace("' ", "'").replace(" -", "-").replace("- ", "-").replace(" ,", ",").replace("\n ", "\n").replace("’", "'")
+def tokens_2_str(tokens: list, remove_extra_nlines = False) -> str:
+    text = " ".join(tokens).strip().replace("' ", "'").replace(" -", "-").replace("- ", "-").replace(" ,", ",").replace("\n ", "\n").replace("’", "'")
+
+    if remove_extra_nlines:
+        text = re.sub('[\n]+', '\n', text)
+    return text
 
 
 # main function to preprocess text, with parameters to choose which preprocessing steps to apply
@@ -54,6 +58,8 @@ def preprocess_genius_text(text, lower_case=True, lemmatization=False, stop_word
     text = re.sub('\n ', '\n', text)
     # ’ => '
     text = text.replace("’", "'")
+    # 1embed
+    text = text.replace("1embed", "")
     # œ => oe, ô => o, etc.
     tokens = list(nlp(text))
 
@@ -180,13 +186,13 @@ def check_dir_contents(dir_path,id_, preprocess_params_str):
 
 # main
 if __name__ == '__main__':
-    OVERWRITE = False
+    OVERWRITE = True
 
     LEMMATIZATION = False
     STOP_WORDS_REMOVAL = False
     STOP_WORDS_TO_KEEP = []
-    PUNCT_REMOVAL = True
-    TOKENISED_OUTPUT = True
+    PUNCT_REMOVAL = False
+    TOKENISED_OUTPUT = False
     CROP_FIRST_LINES = True
     params_str = get_str_preprocess_params_str(lemmatization=LEMMATIZATION,
                                                stop_words_removal=STOP_WORDS_REMOVAL,
