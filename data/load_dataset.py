@@ -9,18 +9,17 @@ def load_dataset_with_pickle(dataset_dir_path, rap_corpus=True, artist_name_focu
 
     # load dataset rap corpus with pickle
     query = os.path.join(dataset_dir_path, f"{artist_name_focus if not rap_corpus else 'rap_corpus'}*.pkl")
-    if file_path_data := glob(query):
-        with open(file_path_data[0], 'rb') as f:
-            sentences_train, next_words_train, sentences_test, next_words_test, set_words, word_index_dict, _, len_dataset = pickle.load(
-                f)
-    else:
+    if not (file_path_data := glob(query)):
         raise ValueError(f"file_path_data {file_path_data} {query} does not exist")
+    with open(file_path_data[0], 'rb') as f:
+        sentences_train, next_words_train, sentences_test, next_words_test, set_words, word_index_dict, _, len_dataset = pickle.load(
+            f)
     # get word index dict
     if file_word_index_dict := glob(os.path.join(dataset_dir_path, "word_index_dict*.pkl")):
         with open(file_word_index_dict[0], 'rb') as f:
             word_index_dict_union = pickle.load(f)
 
-    print("Loaded dataset with pickle from {}.".format(file_path_data[0]))
+    print(f"Loaded dataset with pickle from {file_path_data[0]}.")
     print(f" > len(full_dataset): {len_dataset}")
     print(f" > len(train): {len(sentences_train)} # {sentences_train[0]} {next_words_train[0]} " )
     print(f" > len(test): {len(sentences_test)} # {sentences_test[0]} {next_words_test[0]} " )

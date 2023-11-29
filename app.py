@@ -64,7 +64,7 @@ with c2:
 
 # We need to set up session state via st.session_state so that app interactions don't reset the app.
 
-if not "valid_inputs_received" in st.session_state:
+if "valid_inputs_received" not in st.session_state:
     st.session_state["valid_inputs_received"] = False
 
 
@@ -101,7 +101,7 @@ def generate_text(model, starting_words,window_size, words_indices, indices_word
 
     generated = starting_words#[:]
     sentence = starting_words[-window_size:]
-    for i in range(length):
+    for _ in range(length):
         x_pred = np.zeros((1, window_size, len(words_indices)))
         #print(sentence)
         for t, word in enumerate(sentence):

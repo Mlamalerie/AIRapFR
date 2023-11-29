@@ -37,7 +37,11 @@ class DummyLyricsGenerator():
             raise ValueError("No words in the generator")
         starting_sent_split = starting_sent.split(" ")
         generated_list = [random.choice(self.words) for _ in range(max_len - len(starting_sent_split))]
-        return starting_sent + " " + tokens_2_str(generated_list) if return_with_starting_sent else tokens_2_str(generated_list)
+        return (
+            f"{starting_sent} " + tokens_2_str(generated_list)
+            if return_with_starting_sent
+            else tokens_2_str(generated_list)
+        )
 
     def save(self, dir_path: str):
         """Save the model (with pickle)"""
@@ -65,19 +69,15 @@ def load_dummy_model_from_disk(cdm : CorpusDataManager, artist_name = None) -> D
     if artist_name is None:
 
         query = f"{abs_path}/models/dummy/dummy_model__artists*.pkl"
-        if found_paths := glob(query):
-            path = found_paths[0]
-            return DummyLyricsGenerator.load(path)
-        else:
-            raise ValueError(f"No dummy model found for multiple artists")
+        if not (found_paths := glob(query)):
+            raise ValueError("No dummy model found for multiple artists")
     else:
         artist_id = cdm.get_id_from_artist_name(artist_name)
         query = f"{abs_path}/models/dummy/dummy_model__{artist_id}.pkl"
-        if found_paths := glob(query):
-            path = found_paths[0]
-            return DummyLyricsGenerator.load(path)
-        else:
+        if not (found_paths := glob(query)):
             raise ValueError(f"No dummy model found for artist_name={artist_name}")
+    path = found_paths[0]
+    return DummyLyricsGenerator.load(path)
 
 def main() -> None:
     cdm = CorpusDataManager()

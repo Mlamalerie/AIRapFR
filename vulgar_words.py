@@ -499,19 +499,13 @@ INSULTES_FR = {'abruti',
 def to_censored_word(word):
 
     censored_word = re.sub(r'[aiouèé]', '*', word)
-    if censored_word == word:
-        # change the last letter to a star
-        return word[:-1] + '*'
-    return censored_word
+    return f'{word[:-1]}*' if censored_word == word else censored_word
 
 
 CENSORED_WORDS_DICT = {insulte : to_censored_word(insulte) for insulte in INSULTES_FR}
 def is_vulgar_text(text):
     global CENSORED_WORDS_DICT
-    for word in text.split():
-        if word in CENSORED_WORDS_DICT:
-            return True
-    return False
+    return any(word in CENSORED_WORDS_DICT for word in text.split())
 
 def censor_vulgar_text_(text):
     global CENSORED_WORDS_DICT

@@ -80,7 +80,7 @@ def generate_sentences_next_words_dataset(corpus_tokens, ignored_set_words=set()
         next_word = corpus_tokens[i + max_sentence_length]
 
         # Only add sequences where no word is in ignored_words
-        if len(set(sentence + [next_word]).intersection(ignored_set_words)) == 0:
+        if not set(sentence + [next_word]).intersection(ignored_set_words):
             sentences.append(sentence)
             next_words.append(next_word)
         else:
@@ -178,7 +178,7 @@ def main() -> None:
     if df_rap_fr_corpus is None:
         raise Exception("df_rap_fr_corpus is None")
 
-    rap_fr_corpus_params_str = str(len(df_rap_fr_corpus)) + "__"
+    rap_fr_corpus_params_str = f"{len(df_rap_fr_corpus)}__"
     if PREPROCESSING_TOKENISED_OUTPUT:
         rap_fr_corpus_params_str += "tok_"
     if PREPROCESSING_PUNCT_REMOVAL:
@@ -195,7 +195,7 @@ def main() -> None:
 
     # get now datetime format YYYYMMDD
     now_str = datetime.now().strftime("%Y%m%d")
-    dataset_name = f"dataset"
+    dataset_name = "dataset"
     if artist_id:
         dataset_name += f"-{artist_id}-{corpus_mng.get_artist_name_by_id(artist_id)}"
     dataset_name += f"-{now_str}"
@@ -218,7 +218,7 @@ def main() -> None:
                                                                    tokenised_output=PREPROCESSING_TOKENISED_OUTPUT)
     if df_corpus is None:
         raise Exception("df_corpus is None")
-    corpus_params_str = str(len(df_corpus)) + "__"
+    corpus_params_str = f"{len(df_corpus)}__"
     if PREPROCESSING_TOKENISED_OUTPUT:
         corpus_params_str += "tok_"
     if PREPROCESSING_PUNCT_REMOVAL:
@@ -243,7 +243,7 @@ def main() -> None:
     print(f"Dataset saved with pickle at : {file_path}")
 
     # 3.1 Fuse sets
-    print(f">>>>>> 3. Fusing sets...")
+    print(">>>>>> 3. Fusing sets...")
     set_words_union = set_words.union(set_words_artist)
     word_index_dict_union = {word: index for index, word in enumerate(set_words_union)}
     print(f"set_words_union : {len(set_words_union)}")

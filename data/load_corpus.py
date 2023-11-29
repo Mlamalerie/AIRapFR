@@ -250,7 +250,7 @@ class CorpusDataManager():
                 self.artists_fr = artists_fr
                 df_corpus = df_corpus[df_corpus["artist"].isin(artists_fr)].reset_index(drop=True)
 
-            if ignore_artist_ids is not None and len(ignore_artist_ids) > 0:
+            if ignore_artist_ids is not None and ignore_artist_ids:
                 df_corpus = df_corpus[~df_corpus["primary_artist.id"].isin(ignore_artist_ids)].reset_index(drop=True)
 
             if only_french_songs:

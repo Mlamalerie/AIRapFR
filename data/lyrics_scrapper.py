@@ -39,7 +39,7 @@ def get_genius_id_from_url(url):
     # request and get page content
     page = requests.get(url)
     if page.status_code != 200:
-        return f"Error : {str(page.status_code)}"
+        return f"Error : {page.status_code}"
     # parse html
     soup = bs(page.content, 'html.parser')
     if not (meta := soup.find("meta", {"name": "newrelic-resource-path"})):
@@ -58,7 +58,7 @@ def get_artist_from_query(q: str):
     """
     data = genius.search_artists(f'"{q}"')
     hits = data['sections'][0]['hits']
-    if not len(hits) > 0:
+    if len(hits) <= 0:
         print(f"Artist not found for query: {q}")
         return None
 
@@ -116,8 +116,7 @@ def move_all_lyrics_json_file(where, artist_name="", overwrite=True):
         for file_json in files:
             # verify if file already exist
             new_path = f"{where}/{file_json}"
-            is_already_exist = os.path.isfile(new_path)
-            if is_already_exist:
+            if is_already_exist := os.path.isfile(new_path):
                 print(f"File {file_json} already exist in {where}")
                 if overwrite:
                     os.remove(new_path) # remove file
@@ -141,16 +140,8 @@ def get_df_from_all_json_files(dir_path):
     return pd.concat(dfs, ignore_index=True)
 
 def check_dir_content(dir_path):
-    # verifiy if dir is empty (no json files)
-    no_jsons_in_dir = False
-    if not glob(f'{dir_path}/[Ll]yrics_*.json', recursive=True):
-        no_jsons_in_dir = True
-
-    # verify if dir is empty (no csv file)
-    no_csv_concat_in_dir = False
-    if not glob(f'{dir_path}/df_genius*.csv', recursive=True):
-        no_csv_concat_in_dir = True
-
+    no_jsons_in_dir = not glob(f'{dir_path}/[Ll]yrics_*.json', recursive=True)
+    no_csv_concat_in_dir = not glob(f'{dir_path}/df_genius*.csv', recursive=True)
     return no_jsons_in_dir, no_csv_concat_in_dir
 
 def main():
@@ -209,7 +200,7 @@ def main():
         print(f"No json files in {where_dir_json}")
         return
 
-    if no_csv_concat_in_dir or (not no_csv_concat_in_dir and OVERWRITE):
+    if no_csv_concat_in_dir or OVERWRITE:
         # Get all json files from backup folder, and create a dataframe
         df_all_songs = get_df_from_all_json_files(where_dir_json)
 

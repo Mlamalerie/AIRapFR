@@ -166,7 +166,6 @@ class MarkovChainLyricsGenerator():
 def main() -> None:
     """Main function"""
     cdm = CorpusDataManager()
-    artist_name = "Booba"
     min_freq = 0
     multiple_artist, limit = False, None
 
@@ -176,6 +175,7 @@ def main() -> None:
     if multiple_artist:
         df = cdm.get_full_df_lyrics_corpus(preprocessed=True, punct_removal=True, tokenised_output=True, limit_nb_artists=limit)
     else:
+        artist_name = "Booba"
         df = cdm.get_df_lyrics_preprocessed_by_name(artist_name, punct_removal=True, tokenised_output=True)
     df["lyrics"] = df["lyrics"].progress_apply(ast.literal_eval)
 
@@ -200,20 +200,16 @@ def load_markov_model_from_disk(cdm : CorpusDataManager,k = 2, min_freq = 0, art
     if artist_name is None:
         # example : markov_chain_model__artists_430__k_1__min_freq_2.pkl
         query = f"{abs_path}/models/markov_chain/markov_*model__artists_*__k_{k}__min_freq_{min_freq}.pkl"
-        if found_paths := glob(query):
-            path = found_paths[0]
-            return MarkovChainLyricsGenerator.load(path)
-        else:
+        if not (found_paths := glob(query)):
             raise ValueError(f"No markovchain model found for k={k}, min_freq={min_freq} and multiple artists")
     else:
         artist_id = cdm.get_id_from_artist_name(artist_name)
         # example : markov_chain_model__1273__k_1__min_freq_0.pkl
         query = f"{abs_path}/models/markov_chain/markov_*model__{artist_id}__k_{k}__min_freq_{min_freq}.pkl"
-        if found_paths := glob(query):
-            path = found_paths[0]
-            return MarkovChainLyricsGenerator.load(path)
-        else:
+        if not (found_paths := glob(query)):
             raise ValueError(f"No markovchain model found for k={k}, artist_name={artist_name}, min_freq={min_freq}")
+    path = found_paths[0]
+    return MarkovChainLyricsGenerator.load(path)
 
 
 
